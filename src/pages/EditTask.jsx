@@ -3,26 +3,31 @@ import { Header } from "../components/Header";
 import axios from "axios";
 import { useCookies } from "react-cookie";
 import { url } from "../const";
-import { useHistory, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import "./editTask.css"
 
 export const EditTask = () => {
-  const history = useHistory();
+  const navigate = useNavigate();
   const { listId, taskId } = useParams();
   const [cookies] = useCookies();
   const [title, setTitle] = useState("");
+  const [limit, setTimeLimit] = useState("");
   const [detail, setDetail] = useState("");
   const [isDone, setIsDone] = useState();
   const [errorMessage, setErrorMessage] = useState("");
   const handleTitleChange = (e) => setTitle(e.target.value);
+  const handleTimeLimit = (e) => setTimeLimit(e.target.value)
   const handleDetailChange = (e) => setDetail(e.target.value);
   const handleIsDoneChange = (e) => setIsDone(e.target.value === "done");
   const onUpdateTask = () => {
+    const formattedLimit = limit ? new Date(limit).toISOString() : null;
     console.log(isDone)
     const data = {
       title: title,
+      limit: limit,
       detail: detail,
-      done: isDone
+      done: isDone,
+      limit: formattedLimit,
     }
 
     axios.put(`${url}/lists/${listId}/tasks/${taskId}`, data, {
@@ -30,13 +35,13 @@ export const EditTask = () => {
         authorization: `Bearer ${cookies.token}`
       }
     })
-    .then((res) => {
-      console.log(res.data)
-      history.push("/");
-    })
-    .catch((err) => {
-      setErrorMessage(`更新に失敗しました。${err}`);
-    })
+      .then((res) => {
+        console.log(res.data)
+        navigate("/");
+      })
+      .catch((err) => {
+        setErrorMessage(`更新に失敗しました。${err}`);
+      })
   }
 
   const onDeleteTask = () => {
@@ -45,12 +50,12 @@ export const EditTask = () => {
         authorization: `Bearer ${cookies.token}`
       }
     })
-    .then(() => {
-      history.push("/");
-    })
-    .catch((err) => {
-      setErrorMessage(`削除に失敗しました。${err}`);
-    })
+      .then(() => {
+        navigate("/");
+      })
+      .catch((err) => {
+        setErrorMessage(`削除に失敗しました。${err}`);
+      })
   }
 
   useEffect(() => {
@@ -59,16 +64,18 @@ export const EditTask = () => {
         authorization: `Bearer ${cookies.token}`
       }
     })
-    .then((res) => {
-      const task = res.data
-      setTitle(task.title)
-      setDetail(task.detail)
-      setIsDone(task.done)
-    })
-    .catch((err) => {
-      setErrorMessage(`タスク情報の取得に失敗しました。${err}`);
-    })
-  }, [])
+      .then((res) => {
+        const task = res.data
+        const formattedDeadline = limit ? new Date(limit).toISOString() : null;
+        setTitle(task.title)
+        setTimeLimit(formattedDeadline);
+        setDetail(task.detail)
+        setIsDone(task.done)
+      })
+      .catch((err) => {
+        setErrorMessage(`タスク情報の取得に失敗しました。${err}`);
+      })
+  }, [listId, taskId, cookies.token])
 
   return (
     <div>
@@ -87,6 +94,13 @@ export const EditTask = () => {
           </div>
           <button type="button" className="delete-task-button" onClick={onDeleteTask}>削除</button>
           <button type="button" className="edit-task-button" onClick={onUpdateTask}>更新</button>
+          <label>期限日時</label><br />
+          <input
+            type="datetime-local"
+            onChange={handleTimeLimit}
+            className="edit-task-time-limit"
+            value={limit}
+          />
         </form>
       </main>
     </div>

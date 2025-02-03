@@ -1,3 +1,13 @@
+
+/* iPad Portrait */
+@media only screen and (min-width: 768px) and (max-width: 1024px) and (orientation: portrait) {
+  /* iPad Portrait向けのスタイル */
+}
+
+/* iPhone SE (第2世代) Portrait */
+@media only screen and (max-width: 320px) {
+  /* iPhone SE向けのスタイル */
+}
 .taskList {
   margin: 50px auto;
   list-style: none;
